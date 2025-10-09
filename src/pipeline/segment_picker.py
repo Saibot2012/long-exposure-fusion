@@ -12,7 +12,6 @@ import numpy as np
 import torch
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "external" / "sam2-sequential"))
 from sam2.build_sam import build_sam2_video_predictor
 from PySide6.QtCore import Qt, Slot, QThreadPool, Signal, QTimer, QEvent
 from PySide6.QtGui import QPixmap, QImage, QMouseEvent, QAction, QColor, QPainter, QPen
