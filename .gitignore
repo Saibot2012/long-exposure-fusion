@@ -4,9 +4,6 @@
 # Cache directory
 .cache/
 
-# SAM2 model
-train_log/
-
 # RIFE output
 vid_out/
 
