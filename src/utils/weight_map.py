@@ -8,8 +8,8 @@ from pathlib import Path
 from abc import ABC, abstractmethod
 from guided_filter_pytorch.guided_filter import GuidedFilter
 
-from utils.ImageStore import ImageStore
-from pipeline.segment_picker import MaskLoader
+from src.utils.ImageStore import ImageStore
+from src.pipeline.segment_picker import MaskLoader
 
 # Guided Filter parameters
 DEFAULT_GUIDED_FILTER_RADIUS = 120

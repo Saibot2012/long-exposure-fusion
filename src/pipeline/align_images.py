@@ -10,7 +10,7 @@ from lightglue import LightGlue, DISK
 import torch
 import kornia
 
-from utils.ImageStore import ImageStore
+from src.utils.ImageStore import ImageStore
 
 ALIGNED_DIRNAME = Path("aligned/")
 CROPPED_DIRNAME = Path("cropped/")

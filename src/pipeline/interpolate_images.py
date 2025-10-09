@@ -4,7 +4,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from utils.ImageStore import ImageStore
+from src.utils.ImageStore import ImageStore
 
 RIFE_SCRIPT = Path("./Practical-RIFE/inference_video.py")
 TRAIN_LOG_PATH = Path("./Practical-RIFE/train_log/")

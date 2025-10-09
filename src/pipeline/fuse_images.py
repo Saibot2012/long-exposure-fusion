@@ -2,11 +2,11 @@
 
 import torch
 from tqdm import tqdm
-from utils.pyramids import compute_gaussian_pyramid, compute_laplacian_pyramid, collapse_pyramid
 from pathlib import Path
 
-from utils.weight_map import WeightMap
-from utils.ImageStore import ImageStore
+from src.utils.pyramids import compute_gaussian_pyramid, compute_laplacian_pyramid, collapse_pyramid
+from src.utils.weight_map import WeightMap
+from src.utils.ImageStore import ImageStore
 
 BATCH_SIZE = 4
 OUTPUT_DIRNAME = Path("fused/")

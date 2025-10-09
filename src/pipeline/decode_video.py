@@ -1,8 +1,8 @@
 import subprocess
 from pathlib import Path
 
-import utils.utils as utils
-from utils.ImageStore import ImageStore
+import src.utils.utils as utils
+from src.utils.ImageStore import ImageStore
 
 DECODED_DIRNAME = Path("decoded/")
 

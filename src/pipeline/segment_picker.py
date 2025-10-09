@@ -18,8 +18,8 @@ from PySide6.QtCore import Qt, Slot, QThreadPool, Signal, QTimer, QEvent
 from PySide6.QtGui import QPixmap, QImage, QMouseEvent, QAction, QColor, QPainter, QPen
 from PySide6.QtWidgets import QApplication, QMainWindow, QGraphicsView, QGraphicsScene, QWidget, QVBoxLayout, QLabel, QPushButton, QHBoxLayout, QStyle
 
-from utils.ImageStore import ImageStore
-import utils.utils as utils
+from src.utils.ImageStore import ImageStore
+import src.utils.utils as utils
 
 MASKS_DIRNAME = Path("masks/")
 BLENDED_DIRNAME = Path("blended/")
