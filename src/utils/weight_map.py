@@ -311,7 +311,7 @@ class WeightMapGenerator:
         'saturation': SaturationWeightMap,
         'wellExposedness': WellExposednessWeightMap,
         'luminance': LuminanceWeightMap,
-        'linearMax': LinearValueWeightMap,
+        'linearValue': LinearValueWeightMap,
         'constant': ConstantWeightMap,
         'value': ValueWeightMap,
     }
