@@ -77,11 +77,6 @@ class MaskProcessor:
                     mask_batch.append(torch.zeros((1, H, W), device=device))
             mask_batches.append(torch.stack(mask_batch, dim=0))
 
-        # Save masks for testing
-        for mask_index, mask_batch in enumerate(mask_batches):
-            for frame_index, mask in enumerate(mask_batch):
-                torchvision.utils.save_image(mask, os.path.join(f"test/masks/{1 + mask_index}_{i + frame_index}.jpg"))
-
         guided_filter = GuidedFilter(self.radius, self.epsilon)
         # Perform guided filtering on masks
         for mask_index, mask_batch in enumerate(mask_batches):
@@ -94,11 +89,6 @@ class MaskProcessor:
 
         background = torch.ones((N, 1, H, W), device=device) - torch.sum(torch.stack(mask_batches, dim=0), dim=0)
         mask_batches = [background] + mask_batches
-
-        # Save masks for testing
-        for mask_index, mask_batch in enumerate(mask_batches):
-            for frame_index, mask in enumerate(mask_batch):
-                torchvision.utils.save_image(mask, os.path.join(f"test/guided/{mask_index}_{i + frame_index}.jpg"))
 
         self.cache = { i: mask_batches }
         return mask_batches
