@@ -1,0 +1,9 @@
+maps:
+  - name: "constant"
+    type: "constant"
+
+  - name: "partial"
+    type: "masked"
+    maps:
+      - type: "reference"
+      - type: "constant"
