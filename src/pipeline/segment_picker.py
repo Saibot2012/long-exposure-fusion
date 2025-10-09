@@ -116,10 +116,12 @@ class MaskPredictor:
         if not len(cleared):
             return
 
-        self.points = [
+        new_points = [
             point for point in self.points if
             (point.frame_index, point.object_id) not in cleared
         ]
+        cleared_objects = {point.object_id for point in self.points} - {point.object_id for point in new_points}
+        self.points = new_points
 
         for frame_index, object_id in reversed(sorted(cleared)):
             _, output_object_ids, output_mask_logits = self.predictor.clear_all_prompts_in_frame(
@@ -127,7 +129,22 @@ class MaskPredictor:
                 frame_idx=frame_index,
                 obj_id=object_id
             )
-        frame_index = min(point.frame_index for point in cleared)
+        frame_index = min(frame_index for frame_index, _ in cleared)
+
+        # SAM2 behaves really weird when removing object. I couldn't find a better solution than this.
+        cleared_object_indexes = []
+        for i, object_id in enumerate(output_object_ids):
+            if object_id in cleared_objects:
+                cleared_object_indexes.append(i)
+        output_object_ids = [output_object_ids[i] for i in range(len(output_object_ids)) if i not in cleared_object_indexes]
+        output_mask_logits = [output_mask_logits[i] for i in range(len(output_mask_logits)) if i not in cleared_object_indexes]
+
+        for object_id in cleared_objects:
+            self.predictor.remove_object(
+                inference_state=self.inference_state,
+                obj_id=object_id
+            )
+
         masks = MaskPredictor._masks_from_logits(output_mask_logits, output_object_ids)
         self._save_masks(masks, frame_index)
         blended = self._blend_masks(
@@ -136,25 +153,16 @@ class MaskPredictor:
         )
         self.blended_cache.save_image_at(blended, frame_index)
 
-        self._reset_propagate_iterator()
+        self._reset_propagate_iterator(frame_index)
 
         self._save_points()
-
-        # Check if there are any remaining points for the current object
-        # remaining_points_for_object = [p for p in self.points if p.object_id == object_id]
-        # if not remaining_points_for_object:
-        #     # No points left for this object, remove it entirely from SAM2
-        #     self.predictor.remove_object(
-        #         inference_state=self.inference_state,
-        #         obj_id=self.object_id
-        #     )
 
     def get_frame(self, index: int) -> torch.Tensor:
         if index <= self.valid_mask_index:
             return self.blended_cache.load_image_at(index)
 
         return self._generate_frame(index)
-    
+
     @staticmethod
     def _masks_from_logits(output_mask_logits, output_object_ids) -> list[torch.Tensor]:
         """Convert SAM2 output logits and object IDs to a list of binary masks."""
@@ -173,7 +181,7 @@ class MaskPredictor:
         # image: (H, W, 3) or (3, H, W) torch tensor, uint8 or float32
         # masks: list of (H, W) torch tensors (bool or 0/1)
         tab10 = torch.tensor([
-            [31, 119, 180], [255, 127, 14], [44, 160, 44], [214, 39, 40],
+            [255, 127, 14], [31, 119, 180], [44, 160, 44], [214, 39, 40],
             [148, 103, 189], [140, 86, 75], [227, 119, 194], [127, 127, 127],
             [188, 189, 34], [23, 190, 207]
         ], dtype=torch.float32, device=image.device) / 255.0  # Normalize to [0,1]
@@ -201,7 +209,7 @@ class MaskPredictor:
         # Blend mask with image
         mask_binary = (mask_image != 0).any(dim=2)
         blended = image.clone()
-        alpha = 0.3
+        alpha = 0.6
         blended_mask = image * (1 - alpha) + mask_image * alpha
         # Only blend where mask is present
         blended[mask_binary] = blended_mask[mask_binary]
@@ -273,6 +281,8 @@ class MaskPredictor:
         height, width = masks[0].shape[-2:]
         mask_id_map = torch.zeros((height, width), dtype=torch.uint8) # background is 0
         for obj_id, mask in enumerate(masks, start=1):
+            if mask is None:
+                continue
             mask2d = torch.squeeze(mask) # (H,W)
             # Overlay: assign obj_id where mask is True
             mask_id_map[mask2d] = obj_id
