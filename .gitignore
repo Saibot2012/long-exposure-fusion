@@ -4,6 +4,9 @@
 # Cache directory
 .cache/
 
+# Externals
+external/
+
 # RIFE output
 vid_out/
 
