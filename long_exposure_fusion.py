@@ -45,7 +45,7 @@ class LongExposureFusionConfig:
 def run_long_exposure_fusion(
     source: ImageStore,
     config: LongExposureFusionConfig,
-) -> None:
+) -> ImageStore:
     # 3. Optionally align
     if config.align:
         source = align_images.align(source, config.reference_index)
@@ -107,6 +107,7 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "input",
         type=Path,
+        nargs='?',
         help="Directory of images or path to a video file.",
     )
     parser.add_argument(
@@ -151,6 +152,17 @@ def _parse_args() -> argparse.Namespace:
     )
 
     args = parser.parse_args()
+    
+    # Handle clearing all caches when no input is provided
+    if args.input is None and args.clear_cache:
+        print("[INFO] Clearing all caches.")
+        ImageStore.clear_all_caches()
+        return args
+    
+    # Input is required for normal operation
+    if args.input is None:
+        parser.error("Input is required unless using --clear-cache to clear all caches.")
+    
     if args.reference < 0:
         raise ValueError("Reference must be non-negative (index or ratio).")
     if args.interpolate is not None and args.interpolate < 1:
@@ -169,6 +181,9 @@ def _parse_args() -> argparse.Namespace:
 def main() -> None:
     """Parse arguments and run the long-exposure pipeline."""
     args = _parse_args()
+
+    if args.input is None:
+        return
 
     if args.input.is_file():
         args.input = decode_video.decode(args.input)
@@ -200,7 +215,10 @@ def main() -> None:
     )
 
     if args.output:
-        shutil.copy(output_cache, args.output)
+        args.output.mkdir(parents=True, exist_ok=True)
+        for path in output_cache.path.iterdir():
+            if path.is_file():
+                shutil.copy2(path, args.output)
 
     print(f"[INFO] Fused images saved to {args.output or output_cache.path}")
 
