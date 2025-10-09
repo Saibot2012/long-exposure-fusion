@@ -6,8 +6,8 @@ from pathlib import Path
 
 from src.utils.ImageStore import ImageStore
 
-RIFE_SCRIPT = Path("./Practical-RIFE/inference_video.py")
-TRAIN_LOG_PATH = Path("./Practical-RIFE/train_log/")
+RIFE_SCRIPT = Path("./external/Practical-RIFE/inference_video.py")
+TRAIN_LOG_PATH = Path("./external/Practical-RIFE/train_log/")
 # Hardcoded output directory for Practical-RIFE interpolation. Do not change this.
 RIFE_OUTPUT_DIR = Path("./vid_out/")
 
