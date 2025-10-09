@@ -123,9 +123,10 @@ You should see:
 In the Segment Picker UI:
 - Select object 0 using the object buttons on the right. We'll only be using a single object in this demo.
 We want our object to segment the sky.
-- Left click on the sky to add a positive point to our object.
-- Right click on the mountains to add a negative point to our object.
+- Left click on the lake to add a positive point to our object.
+- Right click next to the lake to add a negative point to our object.
 - Add more points if necessary to have SAM2 mask the sky out.
+If you mess up, press 'c' to clear all points in the frame.
 - Press 'space' to start mask propagation through the video.
 This might take a while, stay hydrated!
 - If the mask is lost during propagation, add more points on intermediate frames.

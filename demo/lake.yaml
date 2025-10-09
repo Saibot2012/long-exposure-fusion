@@ -6,4 +6,4 @@ maps:
     type: "masked"
     maps:
       - type: "reference"
-      - type: "constant"
+      - type: "linearValue"
