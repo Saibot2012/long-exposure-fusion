@@ -46,20 +46,20 @@ def run_long_exposure_fusion(
     source: ImageStore,
     config: LongExposureFusionConfig,
 ) -> ImageStore:
-    # 3. Optionally align
+    # Optionally align
     if config.align:
         source = align_images.align(source, config.reference_index)
         config.reference_index = [
             int(path.stem) for path in source.get_image_filenames()
         ].index(config.reference_index)
 
-    # 4. Optionally interpolate (from disk, in-place)
+    # Optionally interpolate
     if config.interpolate is not None:
         print(f"[INFO] Interpolating {config.interpolate}x frames using Practical-RIFE.")
         source = interpolate_images.interpolate(source, multi=config.interpolate)
         config.reference_index *= config.interpolate
 
-    # 5. Define segmentation masks
+    # Define segmentation masks
     segment_picker.run_segment_picker(source)
 
     if config.weight_map_file is None:
@@ -74,7 +74,7 @@ def run_long_exposure_fusion(
     )
     weight_map_items = list(decoder.from_yaml_file(config.weight_map_file).items())
 
-    # 6. Fuse images using exposure fusion
+    # Fuse images using exposure fusion
     n_levels = 1
     if config.use_pyramid_decomposition:
         # Calculate pyramid levels based on image dimensions

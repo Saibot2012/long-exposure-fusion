@@ -9,10 +9,10 @@ Don't try running the project just yet.
 
 **Long-Exposure Fusion** is a full Python pipeline that generates long-exposure style images from videos or burst photo sequences. Images are generated using our own variant of [Exposure Fusion](https://ieeexplore.ieee.org/document/4392748) that we call Hybrid Weight-Map Fusion.
 
-This repository provides:
-- An automated pipeline for decoding, aligning, interpolating, defining segmentation masks, and fusing images.
+This repository includes:
+- A largely automated pipeline for creating long-exposure style images from image sequences.
 - A simple GUI for segmenting images.
-- Command-line tools for processing your own videos or image bursts.
+- A `.yaml` format for defining fusion weight maps.
 
 ## Installation
 
@@ -52,6 +52,7 @@ All of the following steps should be run inside this venv.
 Install the basic modules using:
 ```bash
 pip install -r requirements.txt
+pip install torch torchvision
 ```
 
 ### Dependencies
@@ -66,8 +67,7 @@ git submodule update --init
 
 Install LightGlue from the `LightGlue` submodule:
 ```bash
-cd external/LightGlue
-pip install -e .
+pip install -e ./external/LightGlue
 ```
 
 #### Practical-RIFE
@@ -82,20 +82,12 @@ SAM2 requires compiling a custom CUDA kernel with the nvcc compiler. If it isn't
 
 Install SAM2 from the `sam2-sequential` submodule:
 ```bash
-cd external/sam2-sequential
-pip install -e .
+pip install -e ./external/sam2-sequential
 ```
 
 Download [this model](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt) and paste the `.pt`file into `external/sam2-sequential/checkpoints/`.  
 You may also use any other of the [pretrained SAM2 models](https://github.com/ThomasMPont/sam2-sequential?tab=readme-ov-file#download-checkpoints).
 If you choose to do so, you'll have to edit the model path in `src/pipeline/segment_picker.py`.
-
-#### PyTorch
-
-Install PyTorch and Torchvision using:
-```bash
-pip3 install torch torchvision
-```
 
 #### FFMPEG
 
@@ -122,10 +114,10 @@ You should see:
 
 In the Segment Picker UI:
 - Select object 0 using the object buttons on the right. We'll only be using a single object in this demo.
-We want our object to segment the sky.
+We want this object to segment the lake.
 - Left click on the lake to add a positive point to our object.
 - Right click next to the lake to add a negative point to our object.
-- Add more points if necessary to have SAM2 mask the sky out.
+- Add more points if necessary to have SAM2 mask only the lake out.
 If you mess up, press 'c' to clear all points in the frame.
 - Press 'space' to start mask propagation through the video.
 This might take a while, stay hydrated!
@@ -135,6 +127,47 @@ You can traverse the sequence using the scroll wheel.
 - Close the UI.
 
 Finally, you should see two fused images be created using the maps defined in `demo/lake.yaml`.
-Once the script is finished, go check out your results in `demo/output`.
-Intermediate results are kept in `.cache/`.
+
+Once the script is finished, go check out your results in `demo/output`.  
+`first.png`, `last.png`, and `reference.png` only hold frames of the input.  
+`constant.png` is a simple single weight map fusion of the video.
+`partial.png` uses the mask you've defined to selectively blur out the lake without affecting other elements.
+
 If you'd like to rerun the entire pipeline, add the parameter `--clear-cache` to the main script to start from scratch.
+
+## Pipeline
+
+The following section describes the steps of our Long-Exposure Fusion pipeline.
+
+### Decode
+
+If the input is in video form, we first decode it into a sequence of frames using [FFmpeg](https://ffmpeg.org/).  
+This is implemented in `decode_video.py`
+
+### Align
+
+Any input that was not captured by a completely static camera should be aligned before any further processing.
+
+If `--align` is set, we use [LightGlue](https://github.com/cvg/LightGlue) with [DISK](https://arxiv.org/abs/2006.13566) as feature extraciton method to compute a transformation that maps each frame onto the reference frame.
+Then, frames with a large enough overlap with the reference frame are cropped onto the largest common rectangle between the aligned frames using [lir](https://github.com/OpenStitching/lir).
+
+### Interpolate
+
+If the framerate of our input sequence is too low, objects might jump too far between frames. This may lead to visible artifacts in our final fusion.
+
+If `--interpolate <multi>` is set, we use [Practical-RIFE](https://github.com/hzwer/Practical-RIFE) to interpolate intermediate frames, which augments the framerate of our input by a factor of `<multi>`.
+
+This is a costly step and should only be done when necessary.
+
+### Segment
+
+In order to treat the various sections of our scene differently during fusion, we use [SAM 2](https://github.com/facebookresearch/sam2) to define and propagate segmentation masks across our image sequence.
+
+The Segment Picker interface allows us to define masks for any number of objects that are then propagated through the image sequence. These masks will be used to restrict the application of the weight maps we define for our fusion step.
+
+### Fusion
+
+The fusion step intelligently combines the input images using the maps defined in `--maps <yaml_file>`.
+The all important `masked` weight map applies a given list of weight maps to the distinct sections defined in the segmentation step.
+
+The results of fusion are then copied into the directory provided in `--output <output_dir>`
