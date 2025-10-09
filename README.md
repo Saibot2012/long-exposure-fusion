@@ -53,12 +53,20 @@ Once in your venv, run:
 pip install -r requirements.txt
 ```
 
-### Submodules
+### Dependencies
 
 This repository depends on forks of [SAM2](https://github.com/ThomasMPont/sam2-sequential) and [Practical-RIFE](https://github.com/ThomasMPont/Practical-RIFE).
 Install them using:
 ```bash
 git submodule update --init
+```
+
+#### FFMPEG
+
+If you plan to use video inputs, you'll need to install ffmpeg:
+```bash
+sudo apt update
+sudo apt install ffmpeg
 ```
 
 #### Practical-RIFE
@@ -71,3 +79,17 @@ You may also use any other of the [pretrained Practical-RIFE models](https://git
 Download [this model](https://dl.fbaipublicfiles.com/segment_anything_2/092824/sam2.1_hiera_tiny.pt) and paste the `.pt`file into `external/sam2-sequential/checkpoints/`.  
 You may also use any other of the [pretrained SAM2 models](https://github.com/ThomasMPont/sam2-sequential?tab=readme-ov-file#download-checkpoints).
 If you choose to do so, you'll have to edit the model path in `src/pipeline/segment_picker.py`.
+
+### Demo
+
+Now that you've installed everything, try running the main script on the demo files:
+```bash
+source venv/bin/activate
+python long_exposure_fusion.py demo/lake.mp4 -m demo/lake.yaml -o demo/output --align --interpolate 2
+```
+This should:
+- Decode the input video `demo/lake.mp4`
+- Align all frames to reference frame 0
+- Interpolate frames to double the framerate
+- Open the Segment Picker UI
+- Run image fusion on each map defined in `demo/lake.yaml`
