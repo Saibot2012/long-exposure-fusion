@@ -4,7 +4,7 @@ This script allows users to click on images to create positive and negative poin
 and uses a SAM model to predict masks based on these points.
 '''
 import sys
-sys.path.insert(0, "/home/endst/code/long-exposure/sam2")
+sys.path.insert(0, "./external/sam2-sequential")
 
 import argparse
 
@@ -24,7 +24,7 @@ import src.utils.utils as utils
 MASKS_DIRNAME = Path("masks/")
 BLENDED_DIRNAME = Path("blended/")
 
-SAM2_CHECKPOINT_PATH = Path("../sam2/checkpoints/sam2.1_hiera_tiny.pt")
+SAM2_CHECKPOINT_PATH = Path("external/sam2-sequential/checkpoints/sam2.1_hiera_tiny.pt")
 MODEL_CONFIG_PATH = Path("configs/sam2.1/sam2.1_hiera_t.yaml")
 
 # Point class for storing annotation info
