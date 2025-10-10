@@ -12,16 +12,21 @@ Don't try running the project just yet.
 ### Motivation
 
 Long exposure images are notoriously hard to capture on non-professional equipment.
+
 ![Blurry handheld long-exposure shot](assets/clumsyFiltered.jpg)
+
 Our method allows for the creation of sythetised long-exposure style images using videos or burst image sequences as input.
 
 Furthermore, long-exposure shots are often plagued by unintentional motion-blurring of subjects.
+
 ![Long-exposure of train](assets/longExposureTrain.jpg)
+
 Our method is able to selectively apply motion blur to only certain objects in the scene.  
-This is achieved by segmenting each input frame using [SAM 2](https://github.com/facebookresearch/sam2) to define hybrid weight maps. These weight maps determine how each pixel of each frame is scaled before being blended with the full sequence. This process is illustrated in the figure below.
+This is achieved by segmenting each input frame using [SAM 2](https://github.com/facebookresearch/sam2). These segmentations are then used to define hybrid weight maps which determine how each pixel of each frame is scaled before being blended with the full sequence. This process is illustrated in the figure below with the weight maps illustrated in grayscale.
+
 ![Long-Exposure Fusion illustration](assets/longExposureFusion.svg)
 
-While some [paid proprietary methods](https://apps.apple.com/us/app/spectre-camera/id1450074595) already automate the creation of long-exposure style images from videos. Our method aims to allow for better control of how inputs are fused using the aforementioned hybrid weight maps.
+While some [paid proprietary methods](https://apps.apple.com/us/app/spectre-camera/id1450074595) already automate the creation of long-exposure style images from videos. Our method aims to allow for better control of how inputs are fused using the aforementioned segmented hybrid weight maps.
 
 ## Installation
 
@@ -30,7 +35,7 @@ While some [paid proprietary methods](https://apps.apple.com/us/app/spectre-came
 This repository is brand new and you may encounter problems before you get everything running.
 Don't hesitate to open a Github issue if you do.
 
-The steps below describe how to install this project on a Linux system with python 3.11.13 and cuda and were tested using WSL.
+The steps below describe how to install this project on a Linux system with python 3.11.13 and cuda 12.9 and were tested using WSL.
 Try using a different environment at your own risk.
 
 ### Source
@@ -56,7 +61,7 @@ Create a virtual environment using:
 python3.11 -m venv venv
 source venv/bin/activate
 ```
-All of the following steps should be run inside this venv.
+All of the steps from now on should be run inside this venv.
 
 Install the basic modules using:
 ```bash
@@ -108,7 +113,7 @@ sudo apt install ffmpeg
 
 ## Demo
 
-Now that you've installed everything, let's try running the main script, with all flags enabled, on the demo video:
+Now that you've installed everything, let's try running the main script on an example:
 ```bash
 source venv/bin/activate
 python long_exposure_fusion.py demo/lake.mp4 -m demo/lake.yaml -o demo/output --align --interpolate 2
@@ -159,6 +164,9 @@ Once the script is finished, go check out your results in `demo/output`.
 - `--clear-cache`: Clear intermediate results and start from scratch
 
 ### Weight Maps
+
+You've reached the core of the project: **weight maps**.
+This section lists which weight maps are available for image fusion and how you can combine them into complex hybrid weight maps.
 
 <!-- TODO -->
 
