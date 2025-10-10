@@ -2,12 +2,14 @@
 
 ## Unfinished
 
-This repository is unfinished and will be ready to use soon.
-Don't try running the project just yet.
+This repository is unfinished and some documentation is missing.
+Please note that you may have trouble running the project on your own.
 
 ## Introduction
 
 **Long-Exposure Fusion** is a full Python pipeline that generates long-exposure style images from videos or burst photo sequences. Images are generated using our own variant of [Exposure Fusion](https://ieeexplore.ieee.org/document/4392748) that we call Hybrid Weight Map Fusion.
+
+![Partial fusion of cloudy sky](assets/fusedClouds.png)
 
 ### Motivation
 
@@ -27,6 +29,24 @@ This is achieved by segmenting each input frame using [SAM 2](https://github.com
 ![Long-Exposure Fusion illustration](assets/longExposureFusion.svg)
 
 While some [paid proprietary methods](https://apps.apple.com/us/app/spectre-camera/id1450074595) already automate the creation of long-exposure style images from videos. Our method aims to allow for better control of how inputs are fused using the aforementioned segmented hybrid weight maps.
+
+### Example
+
+Long-Exposure Fusion is designed to process videos of scenes with slight changes over time, such as this one below:
+
+![Video of sunset in city](assets/cars.gif)
+
+Without the use of weight maps, a simple mean of all input images yields a dull result with washed out colors and odd trails left by the cars.
+
+![Constant blend of sunset scene](assets/constantCars.png)
+
+Our method is able to treat different objects in the image differently.  
+In this example, we've chosen different weight maps for the sky, the city, and the cars such that:
+- the sky is fused while giving more impact to brighter pixels.
+- the city is captured from a reference frame.
+- the cars are eliminated from the scene.
+
+![Long-Exposure Fusion of sunset scene](assets/hiddenCars.png)
 
 ## Installation
 
@@ -72,7 +92,7 @@ pip install torch torchvision
 ### Dependencies
 
 This repository depends on forks of [LightGlue](https://github.com/cvg/LightGlue) [Practical-RIFE](https://github.com/ThomasMPont/Practical-RIFE), and [SAM2](https://github.com/ThomasMPont/sam2-sequential).
-Install them using:
+Download them using:
 ```bash
 git submodule update --init
 ```
@@ -147,6 +167,9 @@ Once the script is finished, go check out your results in `demo/output`.
 `first.png`, `last.png`, and `reference.png` only hold frames of the input.  
 `constant.png` is a simple single weight map fusion of the video.
 `partial.png` uses the mask you've defined to selectively blur out the lake without affecting other elements.
+Note that some artifacts arise from the large change in view angle throughout the image sequence.
+Perhaps you'll find a better weight map that solves this issue.
+The next section details how to design and apply your own weight maps.
 
 ## Usage
 
@@ -163,12 +186,18 @@ Once the script is finished, go check out your results in `demo/output`.
 - `--pyramid`: Process weight maps using pyramid decomposition (as done in the original [Exposure Fusion](https://ieeexplore.ieee.org/document/4392748))
 - `--clear-cache`: Clear intermediate results and start from scratch
 
+### Segment Picker
+
+<!-- TODO -->
+(UNFINISHED)
+
 ### Weight Maps
 
 You've reached the core of the project: **weight maps**.
 This section lists which weight maps are available for image fusion and how you can combine them into complex hybrid weight maps.
 
 <!-- TODO -->
+(UNFINISHED)
 
 ## Pipeline
 
