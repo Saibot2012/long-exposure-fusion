@@ -104,6 +104,7 @@ def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Fuse a burst of photos into a long-exposure image."
     )
+
     parser.add_argument(
         "input",
         type=Path,
@@ -111,11 +112,24 @@ def _parse_args() -> argparse.Namespace:
         help="Directory of images or path to a video file.",
     )
     parser.add_argument(
+        "-m",
+        "--maps",
+        type=Path,
+        help="Path to a YAML file containing weight map definitions to be added to the fusion."
+    )
+
+    parser.add_argument(
         "-o",
         "--output",
         type=Path,
         default=None,
         help="Output directory for fused images (default: '.cache/<input_name>_<hash>/fused').",
+    )
+    parser.add_argument(
+        "--reference",
+        type=float,
+        default=0,
+        help="Index or ratio of reference image for alignment. If int >= 1, treated as index. If float in [0,1], treated as ratio of image count (default: 0).",
     )
     parser.add_argument(
         "--align",
@@ -127,18 +141,6 @@ def _parse_args() -> argparse.Namespace:
         type=int,
         default=None,
         help="Interpolate intermediate frames (RIFE --multi argument, default: None=no interpolation).",
-    )
-    parser.add_argument(
-        "--reference",
-        type=float,
-        default=0,
-        help="Index or ratio of reference image for alignment. If int >= 1, treated as index. If float in [0,1], treated as ratio of image count (default: 0).",
-    )
-    parser.add_argument(
-        "-m",
-        "--maps",
-        type=Path,
-        help="Path to a YAML file containing weight map definitions to be added to the fusion."
     )
     parser.add_argument(
         "--pyramid",

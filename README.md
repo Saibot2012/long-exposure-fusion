@@ -7,12 +7,21 @@ Don't try running the project just yet.
 
 ## Introduction
 
-**Long-Exposure Fusion** is a full Python pipeline that generates long-exposure style images from videos or burst photo sequences. Images are generated using our own variant of [Exposure Fusion](https://ieeexplore.ieee.org/document/4392748) that we call Hybrid Weight-Map Fusion.
+**Long-Exposure Fusion** is a full Python pipeline that generates long-exposure style images from videos or burst photo sequences. Images are generated using our own variant of [Exposure Fusion](https://ieeexplore.ieee.org/document/4392748) that we call Hybrid Weight Map Fusion.
 
-This repository includes:
-- A largely automated pipeline for creating long-exposure style images from image sequences.
-- A simple GUI for segmenting images.
-- A `.yaml` format for defining fusion weight maps.
+### Motivation
+
+Long exposure images are notoriously hard to capture on non-professional equipment.
+![Blurry handheld long-exposure shot](assets/clumsyFiltered.jpg)
+Our method allows for the creation of sythetised long-exposure style images using videos or burst image sequences as input.
+
+Furthermore, long-exposure shots are often plagued by unintentional motion-blurring of subjects.
+![Long-exposure of train](assets/longExposureTrain.jpg)
+Our method is able to selectively apply motion blur to only certain objects in the scene.  
+This is achieved by segmenting each input frame using [SAM 2](https://github.com/facebookresearch/sam2) to define hybrid weight maps. These weight maps determine how each pixel of each frame is scaled before being blended with the full sequence. This process is illustrated in the figure below.
+![Long-Exposure Fusion illustration](assets/longExposureFusion.svg)
+
+While some [paid proprietary methods](https://apps.apple.com/us/app/spectre-camera/id1450074595) already automate the creation of long-exposure style images from videos. Our method aims to allow for better control of how inputs are fused using the aforementioned hybrid weight maps.
 
 ## Installation
 
@@ -99,14 +108,15 @@ sudo apt install ffmpeg
 
 ## Demo
 
-Now that you've installed everything, let's try running the main script, with all flags enabled, on the demo video.
-Don't worry, if you've missed any installs, working intermediate results are cached under `.cache/`.
+Now that you've installed everything, let's try running the main script, with all flags enabled, on the demo video:
 ```bash
 source venv/bin/activate
 python long_exposure_fusion.py demo/lake.mp4 -m demo/lake.yaml -o demo/output --align --interpolate 2
 ```
+In case you've missed installs or encounter errors, intermediate results you've achieved are cached under `.cache/`.
+At any time, you may add the parameter `--clear-cache` to this script to start from scratch.
 
-You should see:
+After running the command above, you should see:
 - FFMPEG decode the input video `demo/lake.mp4`
 - LightGlue align and crop all frames to reference frame 0
 - RIFE interpolate frames to double the framerate
@@ -133,16 +143,36 @@ Once the script is finished, go check out your results in `demo/output`.
 `constant.png` is a simple single weight map fusion of the video.
 `partial.png` uses the mask you've defined to selectively blur out the lake without affecting other elements.
 
-If you'd like to rerun the entire pipeline, add the parameter `--clear-cache` to the main script to start from scratch.
+## Usage
+
+### Parameters
+
+**Required:**
+- `input`: Path to input video file or directory containing image sequence
+- `-m | --maps <file>`: `.yaml` file defining weight maps for fusion (see Weight Maps section below)
+
+**Optional:**
+- `-o | --output <dir>`: Output directory for fused images (output will be cached no matter what)
+- `--align`: Align frames before fusion (recommended for moving cameras)
+- `--interpolate <multi>`: Interpolate frames to increase framerate (use sparingly)
+- `--pyramid`: Process weight maps using pyramid decomposition (as done in the original [Exposure Fusion](https://ieeexplore.ieee.org/document/4392748))
+- `--clear-cache`: Clear intermediate results and start from scratch
+
+### Weight Maps
+
+<!-- TODO -->
 
 ## Pipeline
 
 The following section describes the steps of our Long-Exposure Fusion pipeline.
 
+The pipeline is run in `long_exposure_fusion.py`.
+
 ### Decode
 
-If the input is in video form, we first decode it into a sequence of frames using [FFmpeg](https://ffmpeg.org/).  
-This is implemented in `decode_video.py`
+If the input is in video form, we first decode it into a sequence of frames using [FFmpeg](https://ffmpeg.org/).
+
+This is implemented in `src/pipeline/decode_video.py`.
 
 ### Align
 
@@ -151,13 +181,16 @@ Any input that was not captured by a completely static camera should be aligned 
 If `--align` is set, we use [LightGlue](https://github.com/cvg/LightGlue) with [DISK](https://arxiv.org/abs/2006.13566) as feature extraciton method to compute a transformation that maps each frame onto the reference frame.
 Then, frames with a large enough overlap with the reference frame are cropped onto the largest common rectangle between the aligned frames using [lir](https://github.com/OpenStitching/lir).
 
+This is implemented in `src/pipeline/align_images.py`.
+
 ### Interpolate
 
 If the framerate of our input sequence is too low, objects might jump too far between frames. This may lead to visible artifacts in our final fusion.
 
 If `--interpolate <multi>` is set, we use [Practical-RIFE](https://github.com/hzwer/Practical-RIFE) to interpolate intermediate frames, which augments the framerate of our input by a factor of `<multi>`.
 
-This is a costly step and should only be done when necessary.
+This is a costly step and should only be done when necessary.  
+It is implemented in `src/pipeline/interpolate_images.py`.
 
 ### Segment
 
@@ -165,9 +198,13 @@ In order to treat the various sections of our scene differently during fusion, w
 
 The Segment Picker interface allows us to define masks for any number of objects that are then propagated through the image sequence. These masks will be used to restrict the application of the weight maps we define for our fusion step.
 
+This is implemented in `src/pipeline/segment_picker.py`.
+
 ### Fusion
 
 The fusion step intelligently combines the input images using the maps defined in `--maps <yaml_file>`.
 The all important `masked` weight map applies a given list of weight maps to the distinct sections defined in the segmentation step.
 
 The results of fusion are then copied into the directory provided in `--output <output_dir>`
+
+This is implemented in `src/pipeline/fuse_images.py`.
