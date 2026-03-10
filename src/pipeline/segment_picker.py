@@ -6,7 +6,7 @@ and uses a SAM model to predict masks based on these points.
 import sys
 
 import argparse
-
+import time
 import sys
 import numpy as np
 import torch
@@ -218,6 +218,7 @@ class MaskPredictor:
     
     def _initialize_inference_state(self) -> None:
         self.predictor = build_sam2_video_predictor(str(MODEL_CONFIG_PATH), str(SAM2_CHECKPOINT_PATH), device='cuda')
+        time.sleep(1)
         self.inference_state = self.predictor.init_state(video_path=str(self.source.path), async_loading_frames=True)
 
         points_per_frame = {}

@@ -3,7 +3,10 @@
 
 # Cache directory
 .cache/
-
+venv/
+*.mp4
+*.pt
+_pycache_/
 # Externals
 external/
 
